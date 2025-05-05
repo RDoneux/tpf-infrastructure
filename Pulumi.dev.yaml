@@ -1,0 +1,5 @@
+encryptionsalt: v1:ECijwrcPgAA=:v1:raP6VdDc4f82Kj5+:rUOG86kloDr6+Sdd2/waIRDQ4j20JA==
+config:
+  aws:region: eu-west-2
+  tpf-infrastructure:projectname: character-sheet
+  tpf-infrastructure:servicename: infra-dev
