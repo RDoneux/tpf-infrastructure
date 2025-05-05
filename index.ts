@@ -1,7 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
-export default (async () => {
   const config = new pulumi.Config();
 
   const projectName = config.require("projectname");
@@ -56,7 +55,8 @@ export default (async () => {
     publiclyAccessible: true,
   });
 
-  return {
-    clusterEndpoint: auroraCluster.endpoint,
-  };
-})();
+
+    export const port = auroraCluster.port
+    export const endpoint = auroraCluster.endpoint
+    export const dbUser = auroraCluster.masterUsername
+    export const dbPassword = auroraCluster.masterPassword
