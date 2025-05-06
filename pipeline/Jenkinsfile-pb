@@ -1,0 +1,72 @@
+pipeline {
+    
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'prod'],
+            description: 'Select the environment to deploy to'
+        )
+        choice(
+            name: 'DEPLOYMENT_TYPE',
+            choices: ['up', 'down'],
+            description: 'Bring the stack down or up'
+        )
+    }
+
+    environment {
+        PULUMI_STACK_BUCKET = "doneuxservices-pulumi-state?region=eu-west-2"
+        
+        // can use "pulumi stack -Q" to find this
+        PULUMI_STACK = "organization/tpf-infrastructure/${params.ENVIRONMENT}"
+    }
+
+    stages {
+            stage ("Setup") {
+                steps {
+                    sh "npm i"
+                }
+                post {
+                    success {
+                        echo "Setup success"
+                    }
+                    failure {
+                        echo "Setup failure"
+                    }
+                }
+                
+            }
+
+            stage ("Deploy") {
+                steps {
+                    sh "curl -fsSL https://get.pulumi.com | sh"
+                    sh "$HOME/.pulumi/bin/pulumi version"
+
+                    withCredentials([aws(credentialsId: "AWS_CREDENTIALS")]){
+                        withEnv(["PATH+PULUMI=$HOME/.pulumi/bin"]) {
+                            sh "pulumi login 's3://${PULUMI_STACK_BUCKET}'"
+                            dir("infra") {
+                                sh "npm i"
+                                sh "pulumi stack select ${PULUMI_STACK}"
+                                withCredentials([string(credentialsId: 'PULUMI_ENCRYPTION_KEY', variable: "PULUMI_CONFIG_PASSPHRASE")]) {
+                                    sh "pulumi ${params.DEPLOYMENT_TYPE} --yes"
+                                }
+                            }  
+                        }
+
+                    }
+                }
+                post {
+                    success {
+                        echo "Deploy success"
+                    }
+                    failure {
+                        echo "Deploy failure"
+                    }
+                }
+            }
+        
+    }
+
+}
